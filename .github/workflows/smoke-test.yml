@@ -62,10 +62,7 @@
 #             https://*) echo "paper_url.txt looks good: $line";;
 #             *) echo "::warning::$f should contain exactly one https:// URL on the first line.";;
 #           esac
-
 name: smoke-test
-
-# Proves the pipeline runs successfully and blocks accidental dataset commits.
 
 on:
   push:
@@ -92,16 +89,15 @@ jobs:
       - name: Run the full pipeline
         run: python scripts/run_all.py
 
-- name: Check expected outputs exist
-  run: |
-    echo "Checking generated files..."
+      - name: Check expected outputs exist
+        run: |
+          echo "Checking generated files..."
+          find . -maxdepth 3 -type f | sort
 
-    find . -maxdepth 3 -type f | sort
+          test -f outputs/content_action_playbook.csv
+          test -f figures/action_playbook_overview.png
 
-    test -f outputs/content_action_playbook.csv
-    test -f figures/action_playbook_overview.png
-
-    echo "Pipeline produced expected outputs."
+          echo "Pipeline produced expected outputs."
 
 
   data-leak-check:
@@ -120,9 +116,9 @@ jobs:
             exit 1
           fi
 
-
           # Allowed CSV files
           bad=$(git ls-files '*.csv' | grep -v -E '^(data/raw/content_refresh_anonymized\.csv|outputs/refresh_queue_sample\.csv|outputs/content_action_playbook\.csv|work/outputs/content_action_playbook\.csv)$' || true)
+
           if [ -n "$bad" ]; then
             echo "::error::Unexpected data file(s) committed:"
             echo "$bad"
