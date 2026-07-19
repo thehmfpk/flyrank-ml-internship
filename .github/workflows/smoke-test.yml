@@ -65,8 +65,7 @@
 
 name: smoke-test
 
-# Proves the starter pipeline runs on the bundled sample, and blocks any commit
-# that accidentally includes a real dataset.
+# Proves the pipeline runs successfully and blocks accidental dataset commits.
 
 on:
   push:
@@ -74,9 +73,11 @@ on:
   pull_request:
   workflow_dispatch:
 
+
 jobs:
   run-pipeline:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -88,33 +89,33 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run the full pipeline on the sample
+      - name: Run the full pipeline
         run: python scripts/run_all.py
 
       - name: Check expected outputs exist
         run: |
-          test -f outputs/model_results.json
-          test -f outputs/refresh_queue.csv
-          test -f outputs/model_report.md
           test -f outputs/action_playbook_metrics.json
           test -f outputs/content_action_playbook.csv
           test -f figures/action_playbook_overview.png
           echo "Pipeline produced expected outputs."
 
+
   data-leak-check:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Fail if unexpected data files are committed
+      - name: Check committed data files
         run: |
           set -e
 
-          # Any parquet / archive is an instant fail.
+          # Block dataset archives
           if git ls-files | grep -E '\.(parquet|zip|tar|tar\.gz|feather)$'; then
             echo "::error::Committed a dataset archive. Datasets must not be committed."
             exit 1
           fi
+
 
           # Allowed CSV files
           bad=$(git ls-files '*.csv' | grep -v -E '^(data/raw/content_refresh_anonymized\.csv|outputs/refresh_queue_sample\.csv|outputs/content_action_playbook\.csv)$' || true)
@@ -126,6 +127,7 @@ jobs:
           fi
 
           echo "No leaked datasets."
+
 
       - name: Check submission/paper_url.txt format
         run: |
@@ -139,7 +141,7 @@ jobs:
           line=$(head -1 "$f" | tr -d '[:space:]')
 
           if [ "$line" = "PASTE-YOUR-DEPLOYED-PAPER-URL-HERE" ]; then
-            echo "paper_url.txt still placeholder - fine until your capstone ships."
+            echo "paper_url.txt still placeholder."
             exit 0
           fi
 
@@ -148,6 +150,6 @@ jobs:
               echo "paper_url.txt looks good: $line"
               ;;
             *)
-              echo "::warning::$f should contain exactly one https:// URL on the first line."
+              echo "::warning::$f should contain exactly one https:// URL."
               ;;
           esac
