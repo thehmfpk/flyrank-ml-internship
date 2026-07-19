@@ -18,7 +18,8 @@ STEPS = [
 
 def run_step(index: int, script: str, label: str) -> None:
     print(f"\n{'=' * 70}\n▶ Step {index}/{len(STEPS)} — {label}\n{'=' * 70}", flush=True)
-    subprocess.run([sys.executable, str(ROOT / "scripts" / script)], cwd=ROOT, check=True)
+    script_path = str(ROOT / "scripts" / script)
+    subprocess.run([sys.executable, script_path], cwd=str(ROOT), check=True)
 
 
 def main() -> None:
@@ -33,15 +34,28 @@ def main() -> None:
     for index, (script, label) in enumerate(STEPS, start=1):
         run_step(index, script, label)
 
-    summary_path = OUTPUT_DIR / "summary.json"
+    # The CI smoke-test expects outputs/model_results.json to exist.
+    summary_path = OUTPUT_DIR / "model_results.json"
     if summary_path.exists():
-        summary = read_json(summary_path)
+        try:
+            summary = read_json(summary_path)
+        except Exception as exc:
+            print(f"Warning: failed to read summary file {summary_path}: {exc}", file=sys.stderr)
+            return
+
         print("\nPipeline complete")
-        print(f"Rows scored: {summary['rows_scored']:,}")
-        print(f"Best model: {summary['best_model']}")
-        print(f"Queue: {summary['queue_output']}")
-        print(f"Report: {summary['report_output']}")
+        rows = summary.get("rows_scored")
+        if isinstance(rows, int):
+            print(f"Rows scored: {rows:,}")
+        elif rows is not None:
+            print(f"Rows scored: {rows}")
+
+        print(f"Best model: {summary.get('best_model', 'n/a')}")
+        print(f"Queue: {summary.get('queue_output', OUTPUT_DIR / 'refresh_queue.csv')}")
+        print(f"Report: {summary.get('report_output', OUTPUT_DIR / 'model_report.md')}")
         print(f"PDF: {OUTPUT_DIR / 'flyrank_refresh_model_results.pdf'}")
+    else:
+        print(f"No summary file produced at {summary_path}. If the pipeline failed earlier, inspect the step logs.", file=sys.stderr)
 
 
 if __name__ == "__main__":
