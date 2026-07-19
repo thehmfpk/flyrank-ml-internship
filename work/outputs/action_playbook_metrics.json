@@ -1,0 +1,15 @@
+{
+  "month": "2026-03",
+  "n_content_scored": 141467,
+  "n_actionable_in_queue": 26382,
+  "action_counts": {
+    "NO_ACTION_NEEDED": 69637,
+    "HOLD_INSUFFICIENT_DATA": 45448,
+    "REWRITE_TITLE_META": 21871,
+    "CONTENT_REFRESH": 4511
+  },
+  "base_rate_declining": 0.20265503615684224,
+  "random_seed": 42,
+  "sklearn_version": "1.6.1",
+  "note": "decline_score includes training-set rows (optimistic); see ML-09 for the validated held-out precision@K."
+}
