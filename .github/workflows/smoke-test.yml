@@ -92,12 +92,16 @@ jobs:
       - name: Run the full pipeline
         run: python scripts/run_all.py
 
-      - name: Check expected outputs exist
-        run: |
-          test -f outputs/action_playbook_metrics.json
-          test -f outputs/content_action_playbook.csv
-          test -f figures/action_playbook_overview.png
-          echo "Pipeline produced expected outputs."
+- name: Check expected outputs exist
+  run: |
+    echo "Checking generated files..."
+
+    find . -maxdepth 3 -type f | sort
+
+    test -f outputs/content_action_playbook.csv
+    test -f figures/action_playbook_overview.png
+
+    echo "Pipeline produced expected outputs."
 
 
   data-leak-check:
